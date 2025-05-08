@@ -12,6 +12,7 @@ import java.util.logging.Logger;
 import javax.net.ssl.SSLContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 
 import org.apache.arrow.flight.LocationSchemes;
 import org.apache.arrow.util.AutoCloseables;
@@ -21,6 +22,7 @@ import com.ibm.connect.sdk.util.ServerTokenAuthHandler;
 /**
  * Servlet listener that manages a gRPC flight server.
  */
+@WebListener
 public class Server implements AutoCloseable, ServletContextListener
 {
     private static final Logger LOG = Logger.getLogger(Server.class.getCanonicalName());

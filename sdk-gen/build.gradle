@@ -209,29 +209,29 @@ subprojects {
 
         task dockerLogin {
           description = 'Login to the source docker repository.'
-          onlyIf {
-            docker.dockerCheck()
-            !gradle.startParameter.offline
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !gradle.startParameter.offline
+          // }
           doLast {
             docker.login(repos.docker.username, repos.docker.password, dockerUrl)
           }
         }
         task dockerTargetLogin {
           description = 'Login to the target docker repository.'
-          onlyIf {
-            docker.dockerCheck()
-            !gradle.startParameter.offline
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !gradle.startParameter.offline
+          // }
           doLast {
             docker.login(repos.dockerTarget.username, repos.dockerTarget.password, dockerTargetUrl)
           }
         }
         task getLatestBaseImageVersion(dependsOn: dockerLogin){
-          onlyIf {
-            docker.dockerCheck()
-            !gradle.startParameter.offline
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !gradle.startParameter.offline
+          // }
           doLast {
             ubibaseimageTag = project.properties['image.tag'] ?: ubibaseimageTag
             LogInfo("Image tag of base image is: ${ubiimageName}:${ubibaseimageTag}")
@@ -243,10 +243,10 @@ subprojects {
           getLatestBaseImageVersion
         ]) {
           description = 'Pull the latest ubi Liberty docker image.'
-          onlyIf {
-            docker.dockerCheck()
-            !gradle.startParameter.offline
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !gradle.startParameter.offline
+          // }
           outputs.upToDateWhen {
             docker.imageUpToDate(ubiimageName, ubibaseimageTag)
           }
@@ -256,10 +256,10 @@ subprojects {
         }
         task dockerStop {
           description = 'Stop the personal MicroService Liberty docker container.'
-          onlyIf {
-            docker.dockerCheck()
-            !project.hasProperty('isTemplate')
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !project.hasProperty('isTemplate')
+          // }
           doLast {
             def containerId = docker.containerId(microServiceAppName)
             if (containerId) {
@@ -274,10 +274,10 @@ subprojects {
           dependsOn processServerResources
           dependsOn processDistResources
           description = 'Build the MicroService Liberty docker image for ubi.'
-          onlyIf {
-            docker.dockerCheck()
-            !project.hasProperty('isTemplate')
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !project.hasProperty('isTemplate')
+          // }
           outputs.upToDateWhen {
             docker.imageUpToDate(microServiceUBIImageName, microServiceImageTag) && project.version != null && project.version != "unspecified" && !project.version.endsWith("-SNAPSHOT")
           }
@@ -369,10 +369,10 @@ subprojects {
           dockerTargetLogin
         ]) {
           description = 'Push the Micro-Service Liberty docker image.'
-          onlyIf {
-            docker.dockerCheck()
-            !project.hasProperty('isTemplate')
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !project.hasProperty('isTemplate')
+          // }
           doLast {
             LogInfo("Displaying the docker images ....")
             docker.dockerCommand('images')
@@ -390,10 +390,10 @@ subprojects {
           dockerBuild
         ]) {
           description = 'Start the personal Micro-Service Liberty docker container.'
-          onlyIf {
-            docker.dockerCheck()
-            !project.hasProperty('isTemplate')
-          }
+          // onlyIf {
+          //   docker.dockerCheck()
+          //   !project.hasProperty('isTemplate')
+          // }
           doLast() {
             def unzipDir = file("${buildDir}/tmp/docker")
             copy {
