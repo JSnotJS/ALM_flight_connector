@@ -39,21 +39,25 @@ public class AlmDatasourceType extends CustomFlightDatasourceType
         setLabel(DATASOURCE_TYPE_LABEL);
         setDescription(DATASOURCE_TYPE_DESCRIPTION);
         setAllowedAsSource(true);
-        setAllowedAsTarget(true);
+        setAllowedAsTarget(false);
         setStatus(CustomFlightDatasourceType.StatusEnum.PENDING);
         setTags(Collections.emptyList());
         final CustomFlightDatasourceTypeProperties properties = new CustomFlightDatasourceTypeProperties();
         setProperties(properties);
         // Define the connection properties.
         // TODO adjust these properties for your scenario
-        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("host").label("Host").description("Name of server")
-                .type(TypeEnum.STRING).required(true).group("domain"));
-        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("port").label("Port").description("Port number")
-                .type(TypeEnum.INTEGER).required(true).group("domain"));
-        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("username").label("User name").description("User name")
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("host").label("Host").description("ALM server hostname or IP")
+                .type(TypeEnum.STRING).required(true).group("domain").defaultValue("localhost"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("port").label("Port").description("Port number - for ALM port 22 is recommended")
+                .type(TypeEnum.INTEGER).required(true).group("domain").defaultValue("22"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("username").label("User name").description("User name for ALM authentication")
                 .type(TypeEnum.STRING).required(true).group("credentials"));
-        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("password").label("Password").description("Password")
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("password").label("Password").description("Password for ALM authentication")
                 .type(TypeEnum.STRING).required(true).masked(true).group("credentials"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("ssl").label("Port is SSL-enabled").description("The port is configured to accept SSL connections")
+                .type(TypeEnum.BOOLEAN).required(false).masked(false).group("credentials"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("ssl_certificate").label("SSL certificate").description("The SSL certificate of the host to be trusted which is only needed when the host certificate was not signed by a known certificate authority")
+                .type(TypeEnum.STRING).required(false).masked(false).group("credentials"));
         // Define the source interaction properties.
         properties.addSourceItem(new CustomDatasourceTypeProperty().name("schema_name").label("Schema name")
                 .description("The name of the schema that contains the table to read from").type(TypeEnum.STRING).required(false));
@@ -66,31 +70,31 @@ public class AlmDatasourceType extends CustomFlightDatasourceType
                 .required(false));
 
         // Define the target interaction properties.
-        properties.addTargetItem(new CustomDatasourceTypeProperty().name("schema_name").label("Schema name")
-                .description("The name of the schema that contains the table to write to").type(TypeEnum.STRING).required(false));
-        properties.addTargetItem(new CustomDatasourceTypeProperty().name("table_name").label("Table name")
-                .description("The name of the table to write to").type(TypeEnum.STRING).required(true));
-        properties.addTargetItem(new CustomDatasourceTypeProperty().name("table_action").label("Table action")
-                .description("The action to take on the target table to handle the new data set").type(TypeEnum.ENUM).required(false)
-                .defaultValue("append").addValuesItem(new DatasourceTypePropertyValues().value("append").label("Append"))
-                .addValuesItem(new DatasourceTypePropertyValues().value("replace").label("Replace"))
-                .addValuesItem(new DatasourceTypePropertyValues().value("truncate").label("Truncate")));
-        properties.addTargetItem(new CustomDatasourceTypeProperty().name("create_statement").label("Create statement")
-                .description("The Create DDL statement for creating the target table").type(TypeEnum.STRING).required(false));
+        // properties.addTargetItem(new CustomDatasourceTypeProperty().name("schema_name").label("Schema name")
+        //         .description("The name of the schema that contains the table to write to").type(TypeEnum.STRING).required(false));
+        // properties.addTargetItem(new CustomDatasourceTypeProperty().name("table_name").label("Table name")
+        //         .description("The name of the table to write to").type(TypeEnum.STRING).required(true));
+        // properties.addTargetItem(new CustomDatasourceTypeProperty().name("table_action").label("Table action")
+        //         .description("The action to take on the target table to handle the new data set").type(TypeEnum.ENUM).required(false)
+        //         .defaultValue("append").addValuesItem(new DatasourceTypePropertyValues().value("append").label("Append"))
+        //         .addValuesItem(new DatasourceTypePropertyValues().value("replace").label("Replace"))
+        //         .addValuesItem(new DatasourceTypePropertyValues().value("truncate").label("Truncate")));
+        // properties.addTargetItem(new CustomDatasourceTypeProperty().name("create_statement").label("Create statement")
+        //         .description("The Create DDL statement for creating the target table").type(TypeEnum.STRING).required(false));
 
         // Define the filter properties.
-        properties.addFilterItem(new CustomDatasourceTypeProperty().name("include_system").label("Include system")
-                .description("Whether to include system objects").type(TypeEnum.BOOLEAN).required(false));
-        properties.addFilterItem(new CustomDatasourceTypeProperty().name("include_table").label("Include tables")
-                .description("Whether to include tables").type(TypeEnum.BOOLEAN).required(false));
-        properties.addFilterItem(new CustomDatasourceTypeProperty().name("include_view").label("Include views")
-                .description("Whether to include views").type(TypeEnum.BOOLEAN).required(false));
-        properties.addFilterItem(new CustomDatasourceTypeProperty().name("name_pattern").label("Name pattern")
-                .description("A name pattern to filter on").type(TypeEnum.STRING).required(false));
-        properties.addFilterItem(new CustomDatasourceTypeProperty().name("primary_key").label("Include primary key list")
-                .description("Whether to include a list of primary keys").type(TypeEnum.BOOLEAN).required(false));
-        properties.addFilterItem(new CustomDatasourceTypeProperty().name("schema_name_pattern").label("Schema name pattern")
-                .description("A name pattern for schema filtering").type(TypeEnum.STRING).required(false));
+        // properties.addFilterItem(new CustomDatasourceTypeProperty().name("include_system").label("Include system")
+        //         .description("Whether to include system objects").type(TypeEnum.BOOLEAN).required(false));
+        // properties.addFilterItem(new CustomDatasourceTypeProperty().name("include_table").label("Include tables")
+        //         .description("Whether to include tables").type(TypeEnum.BOOLEAN).required(false));
+        // properties.addFilterItem(new CustomDatasourceTypeProperty().name("include_view").label("Include views")
+        //         .description("Whether to include views").type(TypeEnum.BOOLEAN).required(false));
+        // properties.addFilterItem(new CustomDatasourceTypeProperty().name("name_pattern").label("Name pattern")
+        //         .description("A name pattern to filter on").type(TypeEnum.STRING).required(false));
+        // properties.addFilterItem(new CustomDatasourceTypeProperty().name("primary_key").label("Include primary key list")
+        //         .description("Whether to include a list of primary keys").type(TypeEnum.BOOLEAN).required(false));
+        // properties.addFilterItem(new CustomDatasourceTypeProperty().name("schema_name_pattern").label("Schema name pattern")
+        //        .description("A name pattern for schema filtering").type(TypeEnum.STRING).required(false));
 
         // Define custom actions.
         final CustomDatasourceTypeActionProperties actionProperties = new CustomDatasourceTypeActionProperties();
