@@ -68,4 +68,7 @@ dependencies {
   api project(':' + rootProject.name + '-java-api')
 
   testImplementation group: 'junit', name: 'junit', version: project['junit.version']
+  implementation 'com.google.code.gson:gson:2.11.0'
+  implementation 'org.slf4j:slf4j-api:2.0.13'
+  implementation 'org.slf4j:slf4j-simple:2.0.13' // albo logback jeśli chcesz więcej kontroli
 }

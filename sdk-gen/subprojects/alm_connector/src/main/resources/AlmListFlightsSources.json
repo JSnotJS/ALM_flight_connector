@@ -1,0 +1,71 @@
+{
+  "user": {
+    "current": {
+      "method": "GET",
+      "path": "/user",
+      "query_params": []
+    },
+    "all": {
+      "method": "GET",
+      "path": "/users",
+      "query_params": []
+    },
+    "by_id": {
+      "method": "GET",
+      "path": "/users/{id}",
+      "query_params": ["id"]
+    }
+  },
+
+  "enrollment": {
+    "all": {
+      "method": "GET",
+      "path": "/users/{id}/enrollments",
+      "query_params": ["id"]
+    },
+    "by_id": {
+      "method": "GET",
+      "path": "/users/{id}/enrollments/{enrollmentId}",
+      "query_params": ["id", "enrollmentId"]
+    }
+  },
+
+  "learningObject": {
+    "all": {
+      "method": "GET",
+      "path": "/learningObjects",
+      "query_params": []
+    },
+    "by_id": {
+      "method": "GET",
+      "path": "/learningObjects/{id}",
+      "query_params": ["id"]
+    }
+  },
+
+  "skill": {
+    "all": {
+      "method": "GET",
+      "path": "/skills",
+      "query_params": []
+    },
+    "by_id": {
+      "method": "GET",
+      "path": "/skills/{id}",
+      "query_params": ["id"]
+    }
+  },
+
+  "userSkill": {
+    "all": {
+      "method": "GET",
+      "path": "/users/{userId}/userSkills",
+      "query_params": ["userId"]
+    },
+    "by_id": {
+      "method": "GET",
+      "path": "/users/{userId}/userSkills/{id}",
+      "query_params": ["userId", "id"]
+    }
+  }
+}

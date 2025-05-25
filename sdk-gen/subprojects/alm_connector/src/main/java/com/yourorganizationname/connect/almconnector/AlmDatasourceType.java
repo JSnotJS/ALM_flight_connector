@@ -50,10 +50,14 @@ public class AlmDatasourceType extends CustomFlightDatasourceType
                 .type(TypeEnum.STRING).required(true).group("domain").defaultValue("localhost"));
         properties.addConnectionItem(new CustomDatasourceTypeProperty().name("port").label("Port").description("Port number - for ALM port 22 is recommended")
                 .type(TypeEnum.INTEGER).required(true).group("domain").defaultValue("22"));
-        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("username").label("User name").description("User name for ALM authentication")
+
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("client_id").label("Client ID").description("ID klienta/ zarejestrowanej aplikacji klienta")
                 .type(TypeEnum.STRING).required(true).group("credentials"));
-        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("password").label("Password").description("Password for ALM authentication")
-                .type(TypeEnum.STRING).required(true).masked(true).group("credentials"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("client_secret").label("Client secret").description("pole 'secret' klienta/ zarejestrowanej aplikacji klienta")
+                .type(TypeEnum.STRING).required(true).group("credentials"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("code").label("Oauth code").description("CODE zwrócony przy redirectie po uwierzytelnieniu SSO da Adobe Learning Manager")
+                .type(TypeEnum.STRING).required(true).group("credentials"));
+        
         properties.addConnectionItem(new CustomDatasourceTypeProperty().name("ssl").label("Port is SSL-enabled").description("The port is configured to accept SSL connections")
                 .type(TypeEnum.BOOLEAN).required(false).masked(false).group("credentials"));
         properties.addConnectionItem(new CustomDatasourceTypeProperty().name("ssl_certificate").label("SSL certificate").description("The SSL certificate of the host to be trusted which is only needed when the host certificate was not signed by a known certificate authority")
