@@ -7,21 +7,17 @@ package com.yourorganizationname.connect.almconnector;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import java.util.ArrayList;
+
 
 import org.apache.arrow.flight.Ticket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
 
-
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.IOException;
+import java.sql.SQLException;
 
 import com.ibm.connect.sdk.api.RowBasedConnector;
 import com.ibm.wdp.connect.common.sdk.api.models.ConnectionActionConfiguration;
@@ -37,14 +33,6 @@ public class AlmConnector extends RowBasedConnector<AlmSourceInteraction, AlmTar
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(AlmConnector.class);
 
-
-    private static final String PROP_NAME_CLIENT_ID = "client_id";
-    private static final String PROP_NAME_CLIENT_SECRET = "client_secret";
-    private static final String PROP_NAME_CODE = "code";
-
-
-    private String accessToken; 
-
     /**
      * Creates a row-based connector.
      *
@@ -56,19 +44,6 @@ public class AlmConnector extends RowBasedConnector<AlmSourceInteraction, AlmTar
         super(properties);
     }
 
-    protected String getConnectionClientID()
-    {
-        return this.getConnectionProperties().getProperty(PROP_NAME_CLIENT_ID);
-    }
-    protected String getConnectionClientSecret()
-    {
-        return this.getConnectionProperties().getProperty(PROP_NAME_CLIENT_SECRET);
-    }
-    protected String getConnectionCodeParam()
-    {
-        return this.getConnectionProperties().getProperty(PROP_NAME_CODE);
-    }
-
     @Override
     public void close() throws Exception
     {
@@ -77,84 +52,40 @@ public class AlmConnector extends RowBasedConnector<AlmSourceInteraction, AlmTar
     }
 
     @Override
-    public void connect() throws IOException, InterruptedException
-    {
-        // TODO Auto-generated method stub
+    public void connect() throws IOException, InterruptedException {
         // PIPELINE AUTORYZUJĄCY CONNECTOR, KROKI OPISANE NA:
         // https://experienceleague.adobe.com/en/docs/learning-manager/using/integration/developer-manual
-
-        final String API = "https://learningmanager.adobe.com";
-        final String REFRESH_TOKEN_PATH = "/oauth/token";
-        final String ACCESS_TOKEN_PATH = "/oauth/token/refresh";
         final String TOKEN_DATA_PATH = "/oauth/token/check";
+        final String code = getConnectionProperties().getProperty("code");
+        String accessToken = getConnectionProperties().getProperty("access_token");
+        String refreshToken = getConnectionProperties().getProperty("refresh_token");
 
-        final String clientID = getConnectionClientID();
-        final String clientSecret = getConnectionClientSecret();
-        final String code = getConnectionCodeParam();
+        AlmRequestHandler requestHandler = new AlmRequestHandler(getConnectionProperties());
 
         try {
-            HttpClient client = HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NEVER) // <--- WAŻNE
-            .build();
-            LOGGER.info(clientID);
-            LOGGER.info(clientSecret);
-            LOGGER.info(code);
-
+            if (accessToken != null) {
+                JsonObject jsonObj = requestHandler.sendAuthorizedGET(TOKEN_DATA_PATH, accessToken);
+                if (jsonObj.get("expires_in").getAsInt() > 0) {
+                    accessToken = jsonObj.get("access_token").getAsString();
+                    getConnectionProperties().setProperty("access_token", accessToken);
+                    // valid token => nie odpalamy pipelina z generowaniem teokenu
+                    return; 
+                }
+            }
             // REFRESH_TOKEN
-            HttpRequest refresh_token_request = HttpRequest.newBuilder()
-                .uri(URI.create(String.join("", API, REFRESH_TOKEN_PATH))) 
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(
-                    "client_id=" + clientID +
-                    "&client_secret="+ clientSecret +
-                    "&code=" + code))
-                .build();
-
-            HttpResponse<String> refresh_token_response = client.send(refresh_token_request, HttpResponse.BodyHandlers.ofString());
-            int responseCode = refresh_token_response.statusCode();
-            String body = refresh_token_response.body();
-            if (responseCode != 200) { 
-                throw new RuntimeException("Failed to get REFRESH_TOKEN from Adobe. Code: " + responseCode + body); 
+            if (refreshToken == null) {
+                JsonObject jsonObject = requestHandler.fetchRefreshToken(code);
+                refreshToken = jsonObject.get("refresh_token").getAsString();
+                getConnectionProperties().setProperty("refresh_token", refreshToken);
             }
-            
-            LOGGER.info(body);
-            JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
-            String refreshToken = jsonObject.get("refresh_token").getAsString();
-
             // ACCESS_TOKEN
-            HttpRequest access_token_request = HttpRequest.newBuilder()
-                .uri(URI.create(String.join("", API, ACCESS_TOKEN_PATH))) 
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .POST(HttpRequest.BodyPublishers.ofString(
-                    "client_id=" + clientID +
-                    "&client_secret="+ clientSecret +
-                    "&refresh_token=" + refreshToken))
-                .build();
-
-            HttpResponse<String> access_token_response = client.send(access_token_request, HttpResponse.BodyHandlers.ofString());
-            int responseCode2 = access_token_response.statusCode();
-            String body2 = access_token_response.body();
-            if (responseCode2 != 200) { 
-                throw new RuntimeException("Failed to get ACCESS_TOKEN from Adobe. Code: " + responseCode2 + body2); 
-            }
-            LOGGER.info(body2);
-            JsonObject jsonObject2 = JsonParser.parseString(body2).getAsJsonObject();
+            JsonObject jsonObject2 = requestHandler.fetchAccessToken(refreshToken);
             accessToken = jsonObject2.get("access_token").getAsString();
-            this.getConnectionProperties().setProperty("access_token", accessToken); // globalne dodanie dla sztuki, potem sie posprząta TRASH
+            getConnectionProperties().setProperty("access_token", accessToken); 
 
-            LOGGER.info(accessToken);
-
-            // ponowne pobranie danych tokena
-            // HttpRequest request = HttpRequest.newBuilder()
-            //     .uri(URI.create(String.join("", API, TOKEN_DATA_PATH, "?access_token=YOUR_ACCESS_TOKEN")))
-            //     .GET()
-            //     .build();
-
-            // HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
             throw new RuntimeException("Error during Adobe auth: " + e.getMessage(), e);
         }
-        
     }
 
     @Override
