@@ -57,21 +57,15 @@ public class AlmDatasourceType extends CustomFlightDatasourceType
                 .type(TypeEnum.STRING).required(true).group("credentials"));
         properties.addConnectionItem(new CustomDatasourceTypeProperty().name("code").label("Oauth code").description("CODE zwrócony przy redirectie po uwierzytelnieniu SSO da Adobe Learning Manager")
                 .type(TypeEnum.STRING).required(true).group("credentials"));
+        properties.addConnectionItem(new CustomDatasourceTypeProperty().name("refresh_token").label("Acc token").type(TypeEnum.STRING).required(false).group("credentials"));
         
         properties.addConnectionItem(new CustomDatasourceTypeProperty().name("ssl").label("Port is SSL-enabled").description("The port is configured to accept SSL connections")
                 .type(TypeEnum.BOOLEAN).required(false).masked(false).group("credentials"));
         properties.addConnectionItem(new CustomDatasourceTypeProperty().name("ssl_certificate").label("SSL certificate").description("The SSL certificate of the host to be trusted which is only needed when the host certificate was not signed by a known certificate authority")
                 .type(TypeEnum.STRING).required(false).masked(false).group("credentials"));
         // Define the source interaction properties.
-        properties.addSourceItem(new CustomDatasourceTypeProperty().name("schema_name").label("Schema name")
-                .description("The name of the schema that contains the table to read from").type(TypeEnum.STRING).required(false));
-        properties.addSourceItem(new CustomDatasourceTypeProperty().name("table_name").label("Table name")
-                .description("The name of the table to read from").type(TypeEnum.STRING).required(false));
-        properties.addSourceItem(new CustomDatasourceTypeProperty().name("row_limit").label("Row limit")
-                .description("The maximum number of rows to return").type(TypeEnum.INTEGER).required(false));
-        properties.addSourceItem(new CustomDatasourceTypeProperty().name("byte_limit").label("Byte limit")
-                .description("The maximum number of bytes to return. Use any of these suffixes; KB, MB, GB, or TB").type(TypeEnum.STRING)
-                .required(false));
+        properties.addSourceItem(new CustomDatasourceTypeProperty().name("id").label("ID").type(TypeEnum.STRING).required(false));
+        properties.addSourceItem(new CustomDatasourceTypeProperty().name("userId").label("User ID").type(TypeEnum.STRING).required(false));
 
         // Define the target interaction properties.
         // properties.addTargetItem(new CustomDatasourceTypeProperty().name("schema_name").label("Schema name")

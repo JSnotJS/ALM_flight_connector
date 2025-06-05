@@ -5,12 +5,14 @@
 /* *************************************************** */
 package com.yourorganizationname.connect.almconnector;
 
+import java.lang.invoke.LambdaConversionException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.apache.arrow.flight.Ticket;
 
@@ -30,12 +32,15 @@ public class AlmSourceInteraction extends RowBasedSourceInteraction<AlmConnector
 
     private Iterator<Record> recordIterator;
 
+    List<CustomFlightAssetDescriptor> descriptors = List.of();
+
     protected AlmSourceInteraction(AlmConnector connector, CustomFlightAssetDescriptor asset)
     {
         super();
         setConnector(connector);
         setAsset(asset);
     }
+
 
     @Override
     public Record getRecord() {
@@ -54,58 +59,64 @@ public class AlmSourceInteraction extends RowBasedSourceInteraction<AlmConnector
         return null; // koniec danych
     }
 
+
     @Override
     public void close() throws Exception
     {
         super.close();
     }
 
+
     @Override
     public List<Ticket> getTickets() throws Exception {
-        // Zwracamy ticket z polem "path" (endpoint API) i ewentualnymi interaction_properties
-        // Ticket to binarna reprezentacja JSON z tymi danymi
+        // // Zwracamy ticket z polem "path" (endpoint API) i ewentualnymi interaction_properties
+        // // Ticket to binarna reprezentacja JSON z tymi danymi
         
-        JsonObject ticketJson = new JsonObject();
-        ticketJson.addProperty("path", getAsset().getPath());  // np. "/users"
+        // JsonObject ticketJson = new JsonObject();
+        // ticketJson.addProperty("path", getAsset().getPath());  // np. "/users"
+        // ticketJson.addProperty("id", getAsset().getId());  // np. "/users"
         
-        // interactionProperties mogą zawierać np. {id} parametry wymagane w path
-        JsonObject interactionProps = new JsonObject();
-        if (getAsset().getInteractionProperties() != null) {
-            for (Entry<String, Object> entry : getAsset().getInteractionProperties().entrySet()) {
-                interactionProps.addProperty(entry.getKey(), entry.getValue().toString());
-            }
-        }
-        ticketJson.add("interaction_properties", interactionProps);
+        // // interactionProperties mogą zawierać np. {id} parametry wymagane w path
+        // JsonObject interactionProps = new JsonObject();
+        // if (getAsset().getInteractionProperties() != null) {
+        //     for (Entry<String, Object> entry : getAsset().getInteractionProperties().entrySet()) {
+        //         interactionProps.addProperty(entry.getKey(), entry.getValue().toString());
+        //     }
+        // }
+        // ticketJson.add("interaction_properties", interactionProps);
 
-        Ticket ticket = new Ticket(ticketJson.toString().getBytes(StandardCharsets.UTF_8));
+        // Ticket ticket = new Ticket(ticketJson.toString().getBytes(StandardCharsets.UTF_8));
+        // return List.of(ticket);
+
+        Ticket ticket = new Ticket(String.format("{\"request_id\": \"%s\"}", UUID.randomUUID()).getBytes());
         return List.of(ticket);
     }
 
+
     @Override
     public List<CustomFlightAssetField> getFields() {
-        return List.of(
-            new CustomFlightAssetField().name("id").type("string"),
-            new CustomFlightAssetField().name("name").type("string"),
-            new CustomFlightAssetField().name("email").type("string"),
-            new CustomFlightAssetField().name("lastLoginDate").type("string"),
-            new CustomFlightAssetField().name("state").type("string"),
-            new CustomFlightAssetField().name("roles").type("string")
-        );
+        String name = getAsset().getName();
+        return AlmSchemaProvider.getFieldsFor(name); 
     }
+    
 
     private void initializeRecordIterator() throws Exception {
         // Pobieramy ticket (z flight info), parsujemy go i wykonujemy request HTTP
-        Ticket ticket = getTickets().get(0);
-        String ticketJsonStr = new String(ticket.getBytes(), StandardCharsets.UTF_8);
-        JsonObject ticketJson = JsonParser.parseString(ticketJsonStr).getAsJsonObject();
+        // Ticket ticket = getTickets().get(0);
+        // String ticketJsonStr = new String(ticket.getBytes(), StandardCharsets.UTF_8);
+        // JsonObject ticketJson = JsonParser.parseString(ticketJsonStr).getAsJsonObject();
 
-        String endpointPath = ticketJson.get("path").getAsString();
-        JsonObject interactionProps = ticketJson.getAsJsonObject("interaction_properties");
-
+        // String endpointPath = ticketJson.get("path").getAsString();
+        // String resourceName = ticketJson.get("id").getAsString();
+        // JsonObject interactionProps = ticketJson.getAsJsonObject("interaction_properties");
+        
         // Zamieniamy placeholdery np. {id} w endpointPath na wartości z interactionProps
-        for (Map.Entry<String, com.google.gson.JsonElement> entry : interactionProps.entrySet()) {
-            endpointPath = endpointPath.replace("{" + entry.getKey() + "}", entry.getValue().getAsString());
-        }
+        // for (Map.Entry<String, com.google.gson.JsonElement> entry : interactionProps.entrySet()) {
+        //     endpointPath = endpointPath.replace("{" + entry.getKey() + "}", entry.getValue().getAsString());
+        // }
+
+        String endpointPath = substituteUriParams(getAsset().getPath());
+        String resourceName = getAsset().getId();
         
         AlmConnector connector = getConnector();
         AlmRequestHandler requestHandler = new AlmRequestHandler(connector.getConnectionProperties());
@@ -115,35 +126,26 @@ public class AlmSourceInteraction extends RowBasedSourceInteraction<AlmConnector
         );
 
         List<Record> records = new ArrayList<>();
-        // Zakładamy, że dane są w polu "data" jako tablica JSON
-        for (com.google.gson.JsonElement element : responseBody.getAsJsonArray("data")) {
-            JsonObject obj = element.getAsJsonObject();
-            Record record = new Record();
-
-            record.appendValue(obj.get("id").getAsString());                   // id
-            record.appendValue(obj.get("name").getAsString());                 // name
-            record.appendValue(obj.get("email").getAsString());                // email
-            record.appendValue(obj.get("lastLoginDate").getAsString());        // lastLoginDate
-            record.appendValue(obj.get("state").getAsString());                // state
-
-            if (obj.has("roles") && obj.get("roles").isJsonArray()) {
-                JsonArray rolesArray = obj.getAsJsonArray("roles");
-                StringBuilder rolesStr = new StringBuilder();
-                for (JsonElement role : rolesArray) {
-                    if (rolesStr.length() > 0) rolesStr.append(", ");
-                    rolesStr.append(role.getAsString());
-                }
-                record.appendValue(rolesStr.toString());                              // roles
-            } else {
-                record.appendValue("");                                                // roles = empty string
+        if (responseBody.get("data") == null) {
+            records.add(AlmRecordMapper.mapRecord(resourceName, responseBody));
+        } else {
+            for (com.google.gson.JsonElement element : responseBody.getAsJsonArray("data")) {
+                JsonObject obj = element.getAsJsonObject();
+                records.add(AlmRecordMapper.mapRecord(resourceName, obj));
             }
-
-            records.add(record);
         }
-
         recordIterator = records.iterator();
 
         
+    }
+
+    private String substituteUriParams(String endpointPath) {
+        if (getAsset().getInteractionProperties() != null) {
+            for (Entry<String, Object> entry : getAsset().getInteractionProperties().entrySet()) {
+                endpointPath = endpointPath.replace("{" + entry.getKey() + "}", entry.getValue().toString());
+            }
+        }
+        return endpointPath;
     }
 
 }

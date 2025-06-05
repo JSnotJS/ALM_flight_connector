@@ -94,67 +94,22 @@ public class AlmConnector extends RowBasedConnector<AlmSourceInteraction, AlmTar
         List<CustomFlightAssetDescriptor> assets = new ArrayList<>();
 
         // USERS
-        assets.add(createAsset("user.current", "/user", "Current user")); // do pozyskania userid
+        assets.add(createAsset("user", "/user", "Current user")); // do pozyskania userid
         assets.add(createAsset("users", "/users", "All users"));
-        // assets.add(createAsset("users.by_id", "/users/{id}", "User by ID", Map.of("id", "<required>")));
 
         // ENROLLMENTS
-        assets.add(createAsset("user.enrollments", "/users/{id}/enrollments", "All enrollments for user", Map.of("id", "<required>")));
-        // assets.add(createAsset("user.enrollment_by_id", "/users/{id}/enrollments/{enrollmentId}", "Enrollment by ID", Map.of("id", "<required>", "enrollmentId", "<required>")));
+        assets.add(createAsset("enrollments", "/users/{id}/enrollments", "All enrollments for user", Map.of("id", "<required>")));
 
         // LEARNING OBJECTS
-        assets.add(createAsset("learning.objects", "/learningObjects", "All learning objects"));
-        // assets.add(createAsset("learning.object_by_id", "/learningObjects/{id}", "Learning object by ID", Map.of("id", "<required>")));
+        assets.add(createAsset("learning_objects", "/learningObjects", "All learning objects"));
 
         // SKILLS
         assets.add(createAsset("skills", "/skills", "All skills"));
-        // assets.add(createAsset("skills.by_id", "/skills/{id}", "Skill by ID", Map.of("id", "<required>")));
 
         // USER SKILLS
-        assets.add(createAsset("user.skills", "/users/{userId}/userSkills", "All user skills", Map.of("userId", "<required>")));
-        // assets.add(createAsset("user.skill_by_id", "/users/{userId}/userSkills/{id}", "User skill by ID", Map.of("userId", "<required>", "id", "<required>")));
+        assets.add(createAsset("user_skills", "/users/{userId}/userSkills", "All user skills", Map.of("userId", "<required>")));
 
         return assets;
-
-        // final Properties filters = ModelMapper.toProperties(criteria.getFilters());
-        // final String schemaNamePattern = filters.getProperty("schema_name_pattern");
-        // final String path = normalizePath(criteria.getPath());
-        // final String[] pathElements = splitPath(path);
-        // final List<CustomFlightAssetDescriptor> assets;
-
-        // if (pathElements.length == 0) {
-        //     assets = schemaNamePattern == null ? listSchemas(criteria) : listTables(criteria, null);
-        // } else if (pathElements.length == 1) {
-        //     assets = listTables(criteria, pathElements[0]);
-        // } else if (pathElements.length == 2) {
-        //     // GET /user(s)  ::users   <- do ustalenia, który lepszy (z czy bez s)
-        //     // GET /skills   ::skills
-        //     // GET /enrollments  ::learning object
-        //     // GET /learningObjects   ::
-        //     // GET /users/{userId}/userSkills
-        //     // endpointy wybrane na podstawie grafikki z discorda
-        //     //  ustalić czy poza przeklejeniem patha z ""criteria", trzzeba coś jeszcze tam wrzucać przy przetworzeniu (chuj wie jak to działa, tak se napisałem)
-        //     final String schemaName = pathElements[0];
-        //     final String tableName = pathElements[1];
-        //     final String includePrimaryKey = filters.getProperty("primary_key", "false");
-        //     if (Boolean.valueOf(includePrimaryKey)) {
-        //         assets = listPrimaryKeys(schemaName, tableName);
-        //     } else {
-        //         final DiscoveredAssetInteractionProperties interactionProperties = new DiscoveredAssetInteractionProperties();
-        //         interactionProperties.put("schema_name", schemaName);
-        //         interactionProperties.put("table_name", tableName);
-        //         final CustomFlightAssetDescriptor asset = new CustomFlightAssetDescriptor().name(tableName).path(path)
-        //                 .assetType(tableAssetType()).interactionProperties(interactionProperties);
-        //         if (Boolean.TRUE.equals(criteria.isExtendedMetadata())) {
-        //             asset.setExtendedMetadata(listExtendedMetadata(schemaName, tableName));
-        //         }
-        //         assets = new ArrayList<>();
-        //         assets.add(asset);
-        //     }
-        // } else {
-        //     throw new IllegalArgumentException("Invalid path");
-        // }
-        // return assets;
     }
 
     private CustomFlightAssetDescriptor createAsset(String id, String path, String description) {
